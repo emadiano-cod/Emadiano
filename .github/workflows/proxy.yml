@@ -1,37 +1,24 @@
-name: Free Proxy Server
+name: Simple Proxy
 
 on:
   workflow_dispatch:
-  
+
 jobs:
-  run-proxy:
+  proxy:
     runs-on: ubuntu-latest
+    timeout-minutes: 360
     
     steps:
-    - name: Install Proxy Tools
+    - name: Setup Proxy
       run: |
-        sudo apt-get update
-        sudo apt-get install -y squid
+        sudo apt update
+        sudo apt install -y squid
+        echo "http_port 3128" | sudo tee /etc/squid/squid.conf
+        echo "http_access allow all" | sudo tee -a /etc/squid/squid.conf
+        sudo systemctl restart squid
         
-    - name: Configure Squid Proxy
-      run: |
-        sudo tee /etc/squid/squid.conf > /dev/null <<EOF
-        http_port 3128
-        acl all src 0.0.0.0/0
-        http_access allow all
-        EOF
+    - name: Show IP
+      run: curl ifconfig.me
         
-    - name: Start Proxy Server
-      run: |
-        sudo systemctl start squid
-        echo "Proxy is running on port 3128"
-        
-    - name: Get Public IP
-      run: |
-        echo "Your proxy IP is:"
-        curl -s ifconfig.me
-        
-    - name: Keep Alive
-      run: |
-        echo "Proxy will run for 6 hours..."
-        sleep 21600
+    - name: Keep Running
+      run: sleep 6h
